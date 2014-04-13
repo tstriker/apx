@@ -1,0 +1,379 @@
+#!/usr/bin/env python
+# - coding: utf-8 -
+# Copyright (C) 2013-2014 Toms Bauģis <toms.baugis at gmail.com>
+
+import datetime as dt
+import itertools
+import math
+import random
+
+from collections import defaultdict
+
+from gi.repository import Gtk as gtk
+from gi.repository import Gdk as gdk
+from gi.repository import GObject as gobject
+
+
+from lib import game_utils
+from lib import graphics
+from lib import utils
+from lib import layout
+from lib.pytweener import Easing
+
+import board
+import game
+import splash
+import screens
+import sprites
+
+
+class Scene(graphics.Scene):
+    def __init__(self):
+        graphics.Scene.__init__(self, background_color = "#333")
+
+        self.game = game.Game()
+        self.state_panel = board.StatePanel()
+        self.state_panel.update(self.game)
+        self.board = board.GameBoard(self.game.start_poly)
+
+        self.container = layout.VBox(
+            [self.state_panel, self.board],
+            snap_to_pixel=False, x=0.5, y=0.5, padding=20, spacing=10
+        )
+        self.add_child(self.container)
+
+        self.shout_label = sprites.Label("", size=40, visible=False)
+        self.add_child(self.shout_label)
+
+
+        self._keys_down = []
+
+        self.add_child(screens.PauseScreen(id="pause_screen"))
+
+        self._game_handler = self.game.connect("on-area-claimed", self.on_area_claimed)
+        self.connect("on-key-press", self._on_key_press)
+        self.connect("on-key-release", self._on_key_release)
+        self.connect("on-enter-frame", self._on_enter_frame)
+        self._debug = False
+        self._ticking = False
+        self.just_once = True
+        self.game_over_screen = None
+
+        self.start_ticking()
+        self.new_game()
+
+    def toggle_fullscreen(self, fullscreen=None):
+        window = self.get_toplevel().get_window()
+
+        if fullscreen is None:
+            fullscreen = not bool(gdk.WindowState.FULLSCREEN & window.get_state())
+
+        if fullscreen:
+            window.fullscreen()
+            self.mouse_cursor = False
+        else:
+            window.unfullscreen()
+            self.mouse_cursor = None
+
+
+    def _key_changed(self, event, pressed):
+
+        if event.keyval == gdk.KEY_F11 and not pressed:
+            self.toggle_fullscreen()
+
+        elif event.keyval == gdk.KEY_Escape and not pressed:
+            self.toggle_fullscreen(False)
+
+
+        elif self.game.lives == 0:
+            return
+
+
+        elif event.keyval in (gdk.KEY_Shift_L, gdk.KEY_Shift_R):
+            self.board.cube.speed = "slow" if pressed else "fast"
+
+        elif event.keyval == gdk.KEY_p and not pressed:
+            self.pause_screen(not self.game.paused)
+
+        """
+        # XXX - KILL ALL THE BELOW PRE-PUSH!
+        elif event.keyval == gdk.KEY_d:
+            self._debug = True if pressed else False
+
+        elif event.keyval == gdk.KEY_t and not pressed:
+            # test func
+            self.game_over()
+
+        elif event.keyval == gdk.KEY_q and not pressed:
+            self.game.immortal = not self.game.immortal
+            print "Immortal: ", self.game.immortal
+
+        elif event.keyval == gdk.KEY_f and not pressed:
+            self.board.cube._speeds["slow"] += 2
+            self.board.cube._speeds["fast"] += 3
+            print "Faster, faster!", self.board.cube._speeds
+        """
+
+
+    def _on_key_release(self, scene, event):
+        if event.string:
+            # make sure we don't fall for this sequence:
+            # shift -> A -> shift release -> a release
+            for letter in (event.string.lower(), event.string.upper()):
+                try:
+                    self._keys_down.remove(getattr(gdk, "KEY_%s" % letter))
+                except:
+                    pass
+
+        if event.keyval in self._keys_down:
+            self._keys_down.remove(event.keyval)
+
+        self._key_changed(event, pressed=False)
+
+    def _on_key_press(self, scene, event):
+        if event.keyval not in self._keys_down:
+            self._keys_down.append(event.keyval)
+
+        if self.game_over_screen:
+            # game over wants actual keystrokes, not keydowns
+            self.game_over_screen.handle_keys(self, event, True)
+        else:
+            self._key_changed(event, pressed=True)
+
+
+    def check_death(self):
+        if self.board.check_death(self.game.claiming) is False:
+            return
+
+        if self.game.immortal:
+            return
+
+        self.pause()
+        self.game.die()
+        self.state_panel.update(self.game)
+
+        if self.game.lives <= 0:
+            self.board.cube.beam_out(lambda cube: self.game_over())
+            return
+
+        self.pause()
+        def resume_game(cube):
+            self.game.claiming = False
+            self.pause(False)
+
+        self.board.death(resume_game)
+
+
+    def pause_screen(self, pause):
+        self.find("pause_screen").visible = pause
+        self.pause(pause)
+
+
+    def new_game(self):
+        if self.game_over_screen:
+            self.game_over_screen.parent.remove_child(self.game_over_screen)
+            self.game_over_screen = None
+        self.game.disconnect(self._game_handler)
+        self.game = game.Game()
+        self._game_handler = self.game.connect("on-area-claimed", self.on_area_claimed)
+        self.new_board()
+
+
+    def new_board(self):
+        self.pause()
+        parent = self.board.parent
+        parent.remove_child(self.board)
+        poly, sparks, qix = self.game.start_poly, self.game.stats['sparks'], self.game.stats['qix']
+        self.board = board.GameBoard(poly, sparks, qix)
+        parent.add_child(self.board)
+
+        def start_level(cube):
+            self.pause(False)
+
+        def on_board_done(sprite):
+            self.board.cube.beam_in(start_level)
+            self.state_panel.resize_children()
+
+        self.state_panel.update(self.game)
+        self.board.opacity = 0
+        self.board.cube.visible = False
+        self.board.animate(opacity=1, duration=1, on_complete=on_board_done)
+
+
+    def next_level(self):
+        self.pause()
+        def on_cube_out(sprite):
+            level_screen = screens.LevelScreen(id="level_screen")
+
+            def scores_done():
+                level_screen.parent.remove_child(level_screen)
+                self.game.next_level()
+                self.new_board()
+
+            self.add_child(level_screen)
+            self.board.animate(opacity = 0)
+            level_screen.display_score(self.game, scores_done)
+
+        self.board.cube.beam_out(on_cube_out)
+
+    def change_speed(self, new_speed=None):
+        if new_speed:
+            self.game.speed = new_speed
+
+        if self._ticking:
+            self.pause()
+            gobject.timeout_add(1000 / (45 * self.game.speed), self.change_speed)
+        else:
+            self.pause(False)
+
+
+    def game_over(self):
+        self.game.lives = 0
+        self.change_speed(0.3)
+        self.game_over_screen = screens.GameOverScreen(id="game_over_screen")
+        self.add_child(self.game_over_screen)
+        self.game_over_screen.show(self.game)
+
+
+    def on_area_claimed(self, game, claimed):
+        self.state_panel.update(game)
+        if game.claimed_enough:
+            self.pause()
+            for qix in self.board.qix:
+                qix.explode()
+
+            self.next_level()
+
+        if int(claimed) > 0:
+            self.shout("%d%%" % claimed, int(claimed) * 3)
+
+
+    def pause(self, paused=True):
+        self.game.paused = paused
+        if not paused:
+            self.start_ticking()
+
+    def shout(self, message, shoutiness=30):
+        w, h = self.width, self.height
+        def adjust(sprite):
+            sprite.x = (w - sprite.width * sprite.scale_x) / 2.0
+            sprite.y = (h - sprite.height * sprite.scale_y) / 2.0
+
+        def done(sprite):
+            sprite.visible = False
+
+        self.shout_label.snap_to_pixel = False
+        self.shout_label.stop_animation()
+        self.shout_label.visible = True
+        self.shout_label.text = message
+        self.shout_label.scale_x = self.shout_label.scale_y = 1
+        self.shout_label.opacity = 2
+
+        shoutiness = min(shoutiness, 100) / 100.0 # normalize
+        scale = 3 + 10 * shoutiness
+        duration = 0.7 + shoutiness
+        self.shout_label.animate(scale_x=scale, scale_y=scale,
+                                 opacity=0,
+                                 duration = duration,
+                                 easing=Easing.Quint.ease_out,
+                                 on_update=adjust,
+                                 on_complete=done)
+
+
+    def start_ticking(self):
+        if not self._ticking:
+            self._ticking = True
+            # 45 FPS is our "normal" speed
+            gobject.timeout_add(1000 / (45 * self.game.speed), self._tick)
+
+
+    def _tick(self):
+        if self.game.paused:
+            self._ticking = False
+            return False
+
+        self.board.tick()
+
+        if self.game.lives <= 0:
+            return True
+
+        self.check_death()
+
+        if self._keys_down:
+            self.board._handle_keys(self._keys_down, self.game)
+
+        return True
+
+    def _on_enter_frame(self, scene, context):
+        if not self._debug:
+            return
+
+        g = graphics.Graphics(context)
+        to_scene = self.board.to_scene_coords
+        g.set_line_style(width=3)
+        """
+        for qix in self.board.qix:
+            g.move_to(*to_scene(qix.x, qix.y))
+            g.line_to(*to_scene(qix.next_x, qix.next_y))
+        g.stroke("#f00")
+        """
+
+        for rect in self.board.game_rects:
+            (x1,y1), (x2, y2) = game_utils.box_range(rect)
+            (x1,y1), (x2, y2) = to_scene(x1, y1), to_scene(x2, y2)
+            g.rectangle(x1, y1, x2-x1, y2-y1)
+        g.fill_stroke("#0f0", "#fff", 0.3)
+
+
+
+
+class BasicWindow(object):
+    def __init__(self):
+        self.window = gtk.Window()
+        self.window.connect("delete_event", lambda *args: gtk.main_quit())
+
+        self.game_scene = Scene()
+        w, h = self.game_scene.container.get_min_size()
+        self.window.set_size_request(int(w), int(h))
+
+        splash_scene = splash.Scene()
+        splash_scene.connect("on-key-press", self.on_splash_anykey)
+        self.window.add(splash_scene)
+        self.window.show_all()
+
+
+    def toggle_fullscreen(self, fullscreen=None):
+        window = self.window.get_window()
+
+        if fullscreen is None:
+            fullscreen = not bool(gdk.WindowState.FULLSCREEN & window.get_state())
+
+        if fullscreen:
+            window.fullscreen()
+            self.mouse_cursor = False
+        else:
+            window.unfullscreen()
+            self.mouse_cursor = None
+
+
+    def on_splash_anykey(self, scene, event):
+        if event.keyval == gdk.KEY_F11:
+            self.toggle_fullscreen()
+
+        if event.keyval != gdk.KEY_space:
+            return
+
+        splash = self.window.get_children()[0]
+        self.window.remove(splash)
+        self.window.add(self.game_scene)
+        self.window.show_all()
+        self.game_scene.grab_focus()
+
+
+
+if __name__ == '__main__':
+    utils.install_font("04b03.ttf")
+    window = BasicWindow()
+    import signal
+    signal.signal(signal.SIGINT, signal.SIG_DFL) # gtk3 screws up ctrl+c
+    gtk.main()
