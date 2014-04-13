@@ -14,10 +14,10 @@ Call ./apx.py to run the game
 Game description and goal
 ==========================
 
-APX is a [QIX](http://en.wikipedia.org/wiki/Qix) clone with minor differences from the original in gameplay.
+APX is a [QIX](http://en.wikipedia.org/wiki/Qix) clone with minor differences in gameplay from the original.
 
-Use arrow keys to move around the perimeter of square, use <Space> and <Shift> 
-to "cut" the area. Connect back to perimeter to "claim" the area.
+Use arrow keys to move around the perimeter of square, hold down Space or Shift  
+to cut into the area. Connect back to perimeter to claim the area.
 
 Your objective is to claim 75% or more to proceed to the next level
 
