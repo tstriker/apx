@@ -222,7 +222,7 @@ class Scene(graphics.Scene):
 
         if self._ticking:
             self.pause()
-            gobject.timeout_add(1000 / (45 * self.game.speed), self.change_speed)
+            gobject.timeout_add(int(1000 / (45 * self.game.speed)), self.change_speed)
         else:
             self.pause(False)
 
