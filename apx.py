@@ -222,7 +222,7 @@ class Scene(graphics.Scene):
 
         if self._ticking:
             self.pause()
-            gobject.timeout_add(1000 / (45 * self.game.speed), self.change_speed)
+            gobject.timeout_add(int(1000 / (45 * self.game.speed)), self.change_speed)
         else:
             self.pause(False)
 
@@ -284,7 +284,7 @@ class Scene(graphics.Scene):
         if not self._ticking:
             self._ticking = True
             # 45 FPS is our "normal" speed
-            gobject.timeout_add(1000 / (45 * self.game.speed), self._tick)
+            gobject.timeout_add(int(1000 / (45 * self.game.speed)), self._tick)
 
 
     def _tick(self):
