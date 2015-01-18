@@ -2,11 +2,53 @@
 # - coding: utf-8 -
 # Copyright (C) 2014 Toms Bauģis <toms.baugis at gmail.com>
 import datetime as dt
+import logging
 import sqlite3 as sqlite
+import os
+
+from shutil import copy as copyfile
+
 
 class Storage(object):
     def __init__(self):
         self._con = None
+        self.db_path = self.__init_db_file()
+
+    def __init_db_file(self):
+        try:
+            from xdg.BaseDirectory import xdg_data_home
+            database_dir = os.path.realpath(os.path.join(xdg_data_home, "apx"))
+        except ImportError:
+            print "Could not import xdg - will store apx.sqlite in the home folder"
+            database_dir = os.path.realpath(os.path.expanduser("~"))
+
+        if not os.path.exists(database_dir):
+            os.makedirs(database_dir, 0744)
+
+        # handle the move to xdg_data_home
+        db_path = os.path.join(database_dir, "apx.sqlite")
+
+        # check if we have a database at all
+        if not os.path.exists(db_path):
+            # if not there, copy from the defaults
+            try:
+                from apx import config
+                data_dir = os.path.join(config.DATA_DIR)
+            except ImportError:
+                # if defs is not there, we are running from sources
+                module_dir = os.path.dirname(os.path.realpath(__file__))
+                data_dir = os.path.join(module_dir, '..', 'data')
+
+            data_dir = os.path.realpath(data_dir)
+
+            logging.info("Database not found in %s - installing default from %s!" % (db_path, data_dir))
+            copyfile(os.path.join(data_dir, 'apx.sqlite'), db_path)
+
+            #change also permissions - sometimes they are 444
+            os.chmod(db_path, 0664)
+
+        return db_path
+
 
     def get_scores(self):
         scores = self.fetch("""select date, name, level, score, duration from scores

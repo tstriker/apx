@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # - coding: utf-8 -
-# Copyright (C) 2013-2014 Toms Bauģis <toms.baugis at gmail.com>
+# Copyright (C) 2013-2015 Toms Bauģis <toms.baugis at gmail.com>
 
 import datetime as dt
 import itertools
 import math
 import random
+import os, sys
 
 from collections import defaultdict
 
@@ -13,18 +14,23 @@ from gi.repository import Gtk as gtk
 from gi.repository import Gdk as gdk
 from gi.repository import GObject as gobject
 
+try:
+    import apx
+except ImportError:
+    # when running uninstalled
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from lib import game_utils
-from lib import graphics
-from lib import utils
-from lib import layout
-from lib.pytweener import Easing
+from apx.lib import game_utils
+from apx.lib import graphics
+from apx.lib import utils
+from apx.lib import layout
+from apx.lib.pytweener import Easing
 
-import board
-import game
-import splash
-import screens
-import sprites
+from apx import board
+from apx import game
+from apx import splash
+from apx import screens
+from apx import sprites
 
 
 class Scene(graphics.Scene):
@@ -323,8 +329,6 @@ class Scene(graphics.Scene):
             (x1,y1), (x2, y2) = to_scene(x1, y1), to_scene(x2, y2)
             g.rectangle(x1, y1, x2-x1, y2-y1)
         g.fill_stroke("#0f0", "#fff", 0.3)
-
-
 
 
 class BasicWindow(object):

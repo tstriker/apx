@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2013 First Lastname <your@email.com> -->
+<component type="desktop">
+ <id>apx.desktop</id>
+ <metadata_license>CC0-1.0</metadata_license>
+ <project_license>MIT</project_license>
+ <name>apx</name>
+ <summary>A playful QIX clone</summary>
+ <description>
+  <p>
+   APX is a QIX clone with minor differences in gameplay from the original.
+  </p>
+  <ul>
+    <li>
+        Use arrow keys to move around the perimeter of square, hold down Space or Shift
+        to cut into the area. Connect back to perimeter to claim the area.
+    </li>
+    <li>
+        Your objective is to claim 75% or more to proceed to the next level
+    </li>
+    <li>
+        Claiming with Shift key will be slower but give you double the points.
+    </li>
+    <li>
+        For every claimed full percent over 75% you get extra 1000 points.
+    </li>
+  </ul>
+ </description>
+ <screenshots>
+  <screenshot type="default">
+   <image>https://farm8.staticflickr.com/7434/13823878335_e242ac1c23_o.png</image>
+   <caption>APX gameplay</caption>
+  </screenshot>
+ </screenshots>
+ <url type="homepage">https://github.com/projecthamster/apx</url>
+ <updatecontact>toms.baugis@gmail.com</updatecontact>
+</component>

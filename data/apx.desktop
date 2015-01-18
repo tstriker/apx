@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Terminal=false
+Name=APX
+Comment=APX - a QIX clone
+Icon=/usr/share/apx/icons/apx.svg
+Exec=/usr/bin/apx
+Categories=GNOME;GTK;Games;
