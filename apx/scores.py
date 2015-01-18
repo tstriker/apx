@@ -32,8 +32,8 @@ class Storage(object):
         if not os.path.exists(db_path):
             # if not there, copy from the defaults
             try:
-                from apx import config
-                data_dir = os.path.join(config.DATA_DIR)
+                from apx import conf
+                data_dir = conf.DATA_DIR
             except ImportError:
                 # if defs is not there, we are running from sources
                 module_dir = os.path.dirname(os.path.realpath(__file__))

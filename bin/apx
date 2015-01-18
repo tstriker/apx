@@ -32,6 +32,8 @@ from apx import splash
 from apx import screens
 from apx import sprites
 
+from apx import scores
+scores.Storage()
 
 class Scene(graphics.Scene):
     def __init__(self):

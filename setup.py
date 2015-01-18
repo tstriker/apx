@@ -1,5 +1,6 @@
 #!/usr/bin/env %{__python2}
 # - coding: utf-8 -
+import distutils.command.build_py
 import distutils.command.install
 import os
 import platform
@@ -7,9 +8,8 @@ import sys
 
 from setuptools import setup
 
-DATADIR = os.path.join(sys.prefix, "share", "apx")
-class install(distutils.command.install.install):
 
+class install(distutils.command.install.install):
     def finalize_options(self):
         special_cases = ('debian', 'ubuntu')
         if (platform.system() == 'Linux' and
@@ -20,6 +20,19 @@ class install(distutils.command.install.install):
 
         distutils.command.install.install.finalize_options(self)
 
+
+class build_py(distutils.command.build_py.build_py):
+    """Insert real package installation locations into conf module
+    snatched from meld
+    """
+    def build_module(self, module, module_file, package):
+        if module_file == 'apx/conf.py':
+            datadir = os.path.join(sys.prefix, 'share', 'apx')
+            with open(module_file, 'w') as f:
+                f.write('DATA_DIR = "%s"' % datadir)
+
+        distutils.command.build_py.build_py.build_module(
+            self, module, module_file, package)
 
 
 setup(
@@ -46,12 +59,13 @@ setup(
     data_files= [
         ('share/apx/icons', ['data/apx.svg']),
         ('share/fonts/04b03', ['data/04b03.ttf', 'data/04b03_LICENSE',]),
-        ('data', ['data/apx.sqlite']),
+        ('share/apx', ['data/apx.sqlite']),
         ('share/appdata', ['data/apx.appdata.xml']),
         ('share/applications', ['data/apx.desktop']),
     ],
 
     cmdclass={
+        "build_py": build_py,
         "install": install,
     },
 )
