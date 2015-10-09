@@ -9,6 +9,9 @@ from collections import defaultdict
 import math
 import datetime as dt
 
+import gi
+gi.require_version('Gtk', '3.0')
+gi.require_version('PangoCairo', '1.0')
 
 from gi.repository import Gtk as gtk
 from gi.repository import Gdk as gdk
@@ -586,7 +589,7 @@ class Graphics(object):
                 exts = get_gdk_rectangle(int(exts[0]), int(exts[1]),
                                          int(exts[2]-exts[0]), int(exts[3]-exts[1]))
                 if extents.width and extents.height:
-                    extents = gdk.rectangle_union(extents, exts)
+                    extents = extents.union(exts)
                 else:
                     extents = exts
             elif instruction in ("save", "restore", "translate", "scale", "rotate"):
