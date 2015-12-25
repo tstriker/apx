@@ -10,6 +10,7 @@ import math
 import datetime as dt
 
 import gi
+import collections
 gi.require_version('Gtk', '3.0')
 gi.require_version('PangoCairo', '1.0')
 
@@ -25,7 +26,7 @@ from gi.repository import GdkPixbuf
 import re
 
 try:
-    import pytweener
+    from . import pytweener
 except: # we can also live without tweener. Scene.animate will not work
     pytweener = None
 
@@ -64,7 +65,7 @@ class ColorUtils(object):
         assert color is not None
 
         #parse color into rgb values
-        if isinstance(color, basestring):
+        if isinstance(color, str):
             match = self.hex_color_long.match(color)
             if match:
                 color = [int(color, 16) / 65535.0 for color in match.groups()]
@@ -155,7 +156,7 @@ def chain(*steps):
 
     if len(steps) > 2:
         params['on_complete'] = on_done
-    if callable(obj):
+    if isinstance(obj, collections.Callable):
         obj(**params)
     else:
         obj.animate(**params)
@@ -679,10 +680,10 @@ class Parent(object):
         """will print out the lines in console if debug is enabled for the
            specific sprite"""
         if getattr(self, "debug", False):
-            print dt.datetime.now().time(),
+            print(dt.datetime.now().time(), end=' ')
             for line in lines:
-                print line,
-            print
+                print(line, end=' ')
+            print()
 
     def _add(self, sprite, index = None):
         """add one sprite at a time. used by add_child. split them up so that
@@ -1174,7 +1175,7 @@ class Sprite(Parent, gobject.GObject):
             return scene.animate(self, duration, easing, on_complete,
                                  on_update, round, **kwargs)
         else:
-            for key, val in kwargs.items():
+            for key, val in list(kwargs.items()):
                 setattr(self, key, val)
             return None
 
@@ -1492,7 +1493,7 @@ class Label(Sprite):
 
     def __setattr__(self, name, val):
         if name == "font_desc":
-            if isinstance(val, basestring):
+            if isinstance(val, str):
                 val = pango.FontDescription(val)
             elif isinstance(val, pango.FontDescription):
                 val = val.copy()

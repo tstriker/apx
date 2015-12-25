@@ -8,14 +8,14 @@ import random
 
 import itertools
 
-import board
-import sprites
+from . import board
+from . import sprites
 
-from lib import game_utils
-from lib import graphics
-from lib import layout
-from lib import utils
-from lib.pytweener import Easing
+from .lib import game_utils
+from .lib import graphics
+from .lib import layout
+from .lib import utils
+from .lib.pytweener import Easing
 
 
 class StatePanel(layout.VBox):
@@ -298,7 +298,7 @@ class GameBoard(graphics.Sprite):
         # find the furthest step we can take for the next game polygon dot
         # when not drawing that's as far as we can go on current line
         # when drawing, that's the closest border within step
-        for speed in reversed(range(self.cube.speed)):
+        for speed in reversed(list(range(self.cube.speed))):
             game_x = x if direction in ("up", "down") else x + (speed + 1) * speed_direction
             game_y = y if direction in ("left", "right") else y + (speed + 1) * speed_direction
 
