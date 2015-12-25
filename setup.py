@@ -57,7 +57,7 @@ setup(
     packages=['apx', 'apx.lib'],
     scripts=['bin/apx'],
     data_files= [
-        ('share/apx/icons', ['data/apx.svg']),
+        ('share/icons/hicolor/scalable', ['data/apx.svg']),
         ('share/fonts/04b03', ['data/04b03.ttf', 'data/04b03_LICENSE',]),
         ('share/apx', ['data/apx.sqlite']),
         ('share/appdata', ['data/apx.appdata.xml']),

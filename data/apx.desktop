@@ -4,6 +4,6 @@ Type=Application
 Terminal=false
 Name=APX
 Comment=APX - a QIX clone
-Icon=/usr/share/apx/icons/apx.svg
+Icon=/usr/share/icons/hicolor/scalable/apx.svg
 Exec=/usr/bin/apx
 Categories=GNOME;GTK;Games;
