@@ -4,7 +4,7 @@
 import datetime as dt
 
 from gi.repository import GObject as gobject
-from lib import game_utils
+from .lib import game_utils
 from collections import defaultdict
 
 class Game(gobject.GObject):

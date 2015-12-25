@@ -6,13 +6,13 @@ import random
 
 from gi.repository import GObject as gobject
 
-from lib import graphics
-from lib.pytweener import Easing
+from .lib import graphics
+from .lib.pytweener import Easing
 
-from lib import game_utils
-from lib import layout
+from .lib import game_utils
+from .lib import layout
 
-import colors
+from . import colors
 
 class Label(layout.Label):
     def __init__(self, *args, **kwargs):
@@ -59,7 +59,7 @@ class Cubic(graphics.Sprite):
 
     @property
     def current_speed(self):
-        for speed_name, speed in self._speeds.iteritems():
+        for speed_name, speed in self._speeds.items():
             if speed == self.drawing_speed:
                 return speed_name
         return "fast"

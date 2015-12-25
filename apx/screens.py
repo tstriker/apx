@@ -7,13 +7,13 @@ import datetime as dt
 from gi.repository import Gtk as gtk
 from gi.repository import Gdk as gdk
 
-import scores
-import sprites
+from . import scores
+from . import sprites
 
-from lib import graphics
-from lib import layout
-from lib import utils
-from lib.pytweener import Easing
+from .lib import graphics
+from .lib import layout
+from .lib import utils
+from .lib.pytweener import Easing
 
 class PauseScreen(layout.Container):
     def __init__(self, id):

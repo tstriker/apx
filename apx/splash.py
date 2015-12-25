@@ -11,10 +11,10 @@ from gi.repository import Gtk as gtk
 from gi.repository import GObject as gobject
 from gi.repository import Pango as pango
 
-from lib import graphics
-from lib.pytweener import Easing
+from .lib import graphics
+from .lib.pytweener import Easing
 
-import sprites
+from . import sprites
 
 class Point(gobject.GObject):
     __gsignals__ = {

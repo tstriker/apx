@@ -19,11 +19,11 @@ class Storage(object):
             from xdg.BaseDirectory import xdg_data_home
             database_dir = os.path.realpath(os.path.join(xdg_data_home, "apx"))
         except ImportError:
-            print "Could not import xdg - will store apx.sqlite in the home folder"
+            print("Could not import xdg - will store apx.sqlite in the home folder")
             database_dir = os.path.realpath(os.path.expanduser("~"))
 
         if not os.path.exists(database_dir):
-            os.makedirs(database_dir, 0744)
+            os.makedirs(database_dir, 0o744)
 
         # handle the move to xdg_data_home
         db_path = os.path.join(database_dir, "apx.sqlite")
@@ -45,7 +45,7 @@ class Storage(object):
             copyfile(os.path.join(data_dir, 'apx.sqlite'), db_path)
 
             #change also permissions - sometimes they are 444
-            os.chmod(db_path, 0664)
+            os.chmod(db_path, 0o664)
 
         return db_path
 
@@ -54,7 +54,7 @@ class Storage(object):
         scores = self.fetch("""select date, name, level, score, duration from scores
                              order by score desc;
                             """)
-        return [dict(zip(("date", "name", "level", "score", "duration"), row)) for row in scores]
+        return [dict(list(zip(("date", "name", "level", "score", "duration"), row))) for row in scores]
 
 
     def save_score(self, player_name, game):
