@@ -8,7 +8,6 @@ import random
 
 import itertools
 
-from . import board
 from . import sprites
 
 from .lib import game_utils

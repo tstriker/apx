@@ -680,9 +680,9 @@ class Parent(object):
         """will print out the lines in console if debug is enabled for the
            specific sprite"""
         if getattr(self, "debug", False):
-            print(dt.datetime.now().time(), end=' ')
+            print(dt.datetime.now().time())
             for line in lines:
-                print(line, end=' ')
+                print(line)
             print()
 
     def _add(self, sprite, index = None):
