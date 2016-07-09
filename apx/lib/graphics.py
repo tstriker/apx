@@ -194,10 +194,9 @@ class Graphics(object):
        See http://cairographics.org/documentation/pycairo/2/reference/context.html
        for detailed description of the cairo drawing functions.
     """
-    __slots__ = ('context', 'colors', 'extents', 'paths', '_last_matrix',
+    __slots__ = ('context', 'extents', 'paths', '_last_matrix',
                  '__new_instructions', '__instruction_cache', 'cache_surface',
                  '_cache_layout')
-    colors = Colors # pointer to the color utilities instance
 
     def __init__(self, context = None):
         self.context = context
@@ -327,7 +326,7 @@ class Graphics(object):
         also consider skipping this operation and specify the color on stroke and
         fill.
         """
-        color = self.colors.parse(color) # parse whatever we have there into a normalized triplet
+        color = Colors.parse(color) # parse whatever we have there into a normalized triplet
         if len(color) == 4 and alpha is None:
             alpha = color[3]
         r, g, b = color[:3]
@@ -1783,9 +1782,6 @@ class Scene(Parent, gtk.DrawingArea):
         self.tweener = False
         if pytweener:
             self.tweener = pytweener.Tweener(0.4, pytweener.Easing.Cubic.ease_in_out)
-
-        #: instance of :class:`ColorUtils` class for color parsing
-        self.colors = Colors
 
         #: read only info about current framerate (frames per second)
         self.fps = None # inner frames per second counter
