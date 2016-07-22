@@ -344,6 +344,9 @@ class BasicWindow(object):
         w, h = self.game_scene.container.get_min_size()
         self.window.set_size_request(int(w), int(h))
 
+        self.window.override_background_color(gtk.StateType.NORMAL,
+                                              gdk.RGBA(*graphics.Colors.parse("#333")))
+
         splash_scene = splash.Scene()
         splash_scene.connect("on-key-press", self.on_splash_anykey)
         self.window.add(splash_scene)
