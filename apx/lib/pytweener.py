@@ -209,7 +209,7 @@ class Tweenable(object):
 
         def color_update(fraction):
             val = [max(min(self.start_value[i] + self.change[i] * fraction, 255), 0)  for i in range(3)]
-            return "#%02x%02x%02x" % (val[0], val[1], val[2])
+            return "#" + "".join(["%02x" % int(v) for v in val])
 
 
         if isinstance(start_value, int) or isinstance(start_value, float):

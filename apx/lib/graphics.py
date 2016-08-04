@@ -103,7 +103,7 @@ class ColorUtils(object):
 
     def hex(self, color):
         c = self.parse(color)
-        return "#" + "".join(["%02x" % (color * 255) for color in c])
+        return "#" + "".join(["%02x" % int(color * 255) for color in c])
 
     def is_light(self, color):
         """tells you if color is dark or light, so you can up or down the
